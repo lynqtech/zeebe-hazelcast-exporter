@@ -1,22 +1,19 @@
 package io.zeebe.hazelcast.exporter;
 
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.client.config.ClientConfig;
-import com.hazelcast.config.Config;
-import com.hazelcast.config.RingbufferConfig;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.ringbuffer.Ringbuffer;
-import io.camunda.zeebe.exporter.api.Exporter;
-import io.camunda.zeebe.exporter.api.context.Context;
-import io.camunda.zeebe.exporter.api.context.Controller;
+import com.hazelcast.client.*;
+import com.hazelcast.client.config.*;
+import com.hazelcast.config.*;
+import com.hazelcast.core.*;
+import com.hazelcast.ringbuffer.*;
+import io.camunda.zeebe.exporter.api.*;
+import io.camunda.zeebe.exporter.api.context.*;
+import io.camunda.zeebe.protocol.record.*;
 import io.camunda.zeebe.protocol.record.Record;
-import io.zeebe.exporter.proto.RecordTransformer;
-import io.zeebe.exporter.proto.Schema;
-import org.slf4j.Logger;
+import io.zeebe.exporter.proto.*;
+import org.slf4j.*;
 
-import java.time.Duration;
-import java.util.function.Function;
+import java.time.*;
+import java.util.function.*;
 
 public class HazelcastExporter implements Exporter {
 
@@ -137,7 +134,14 @@ public class HazelcastExporter implements Exporter {
 
   @Override
   public void close() {
-    hazelcast.shutdown();
+    if (hazelcast != null) {
+      logger.info("Hazelcast is going to be shutdown");
+      hazelcast.shutdown();
+    } else {
+      // the client is only created in some lifecycles, so during others (e.g. validation) it may not
+      // exist, in which case there's no point flushing or doing anything
+      logger.info("Hazelcast is null, won't shutdown nothing");
+    }
   }
 
   @Override
